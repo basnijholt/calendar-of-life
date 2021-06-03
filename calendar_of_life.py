@@ -25,7 +25,7 @@ for dark_mode in [True, False]:
     today = datetime.date.today()
     life = [
         ("born", birthday),
-        ("child", birthday + datetime.timedelta(days=5 * 365)),
+        ("early childhood", birthday + datetime.timedelta(days=5 * 365)),
         ("school", datetime.date(2003, 8, 18)),
         ("high school", datetime.date(2009, 9, 1)),
         ("university", datetime.date(2015, 8, 1)),
@@ -40,7 +40,7 @@ for dark_mode in [True, False]:
 
     data = defaultdict(list)
     colors = {
-        "child": "C0",
+        "early childhood": "C0",
         "school": "C1",
         "high school": "C2",
         "university": "C3",
@@ -69,7 +69,7 @@ for dark_mode in [True, False]:
         if i % 10 == 0 and i > 0:
             ax.text(
                 -0.2,
-                year,
+                years[i-1],
                 f"{i}y",
                 horizontalalignment="right",
                 verticalalignment="center",
