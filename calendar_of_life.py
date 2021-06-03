@@ -26,8 +26,8 @@ for dark_mode in [True, False]:
     life = [
         ("born", birthday),
         ("child", birthday + datetime.timedelta(days=5 * 365)),
-        ("school", birthday + datetime.timedelta(days=12 * 365)),
-        ("high school", birthday + datetime.timedelta(days=18 * 365)),
+        ("school", datetime.date(2003, 8, 18)),
+        ("high school", datetime.date(2009, 9, 1)),
         ("university", datetime.date(2015, 8, 1)),
         ("travel", datetime.date(2016, 2, 1)),
         ("phd", datetime.date(2020, 2, 1)),
