@@ -25,7 +25,7 @@ for dark_mode in [True, False]:
     today = datetime.date.today()
     life = [
         ("born", birthday),
-        ("early childhood", birthday + datetime.timedelta(days=4.5 * 365)),
+        ("early childhood", birthday + datetime.timedelta(days=4 * 365)),
         ("school", datetime.date(2003, 8, 18)),
         ("high school", datetime.date(2009, 9, 1)),
         ("university", datetime.date(2015, 8, 1)),
