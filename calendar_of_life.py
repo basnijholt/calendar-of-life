@@ -8,6 +8,7 @@ import imageio
 import matplotlib.pyplot as plt
 import numpy as np
 from apng import APNG
+from pygifsicle import optimize
 
 
 def create_calendar(
@@ -102,8 +103,9 @@ if __name__ == "__main__":
     create_calendar(dark_mode=False, fname="calendar-of-life.png", show=False)
 
     # Create animation
+    alphas = np.linspace(0, 1, 6)
     fnames = []
-    for alpha in np.linspace(0, 1, 6):
+    for alpha in alphas:
         fname = f"alpha-{alpha}.png"
         create_calendar(
             dark_mode=True, current_week_alpha=alpha, fname=fname, show=False
@@ -111,16 +113,19 @@ if __name__ == "__main__":
         fnames.append(fname)
     fnames += fnames[::-1]
 
+    ## Saving images
+    fname_animated = "calendar-of-life-dark-animated"
     # Save animated png
     im = APNG()
     for fname in fnames:
         im.append_file(fname, delay=50)
-    im.save("calendar-of-life-dark-animated.png")
+    im.save(f"{fname_animated}.png")
 
     # Save gif
     images = [imageio.imread(fname) for fname in fnames]
-    imageio.mimsave("calendar-of-life-dark-animated.gif", images)
+    imageio.mimsave(f"{fname_animated}.gif", images)
+    optimize(f"{fname_animated}.gif")
 
     # Cleanup
-    for fname in fnames:
+    for fname in fnames[:len(alphas)]:
         os.unlink(fname)
