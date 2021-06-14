@@ -1,18 +1,26 @@
 import bisect
 import datetime
+import os
 from collections import defaultdict
+from typing import Optional
 
+import imageio
 import matplotlib.pyplot as plt
 import numpy as np
+from apng import APNG
 
-for dark_mode in [True, False]:
+
+def create_calendar(
+    dark_mode: bool = True,
+    fname: str = "calendar-of-life-dark.png",
+    current_week_alpha: Optional[float] = None,
+    show: bool = True,
+):
     if dark_mode:
-        fname = "calendar-of-life-dark.png"
         plt.style.use("dark_background")
         face = "k"
         edge = "w"
     else:
-        fname = "calendar-of-life.png"
         plt.rcParams.update(plt.rcParamsDefault)
         face = "w"
         edge = "k"
@@ -64,7 +72,15 @@ for dark_mode in [True, False]:
 
     for k, v in data.items():
         ax.scatter(*zip(*v), edgecolors=edge, facecolor=colors[k], label=k)
-
+    if current_week_alpha is not None:
+        current_week = data["future"].pop(0)
+        ax.scatter(
+            *current_week,
+            edgecolors=edge,
+            facecolor="white",
+            label="now",
+            alpha=current_week_alpha,
+        )
     for i, year in enumerate(years):
         if i % 10 == 0 and i > 0:
             ax.text(
@@ -77,4 +93,34 @@ for dark_mode in [True, False]:
             )
     plt.legend()
     plt.savefig(fname, dpi=300)
-    plt.show()
+    if show:
+        plt.show()
+
+
+if __name__ == "__main__":
+    create_calendar(dark_mode=True, fname="calendar-of-life-dark.png", show=False)
+    create_calendar(dark_mode=False, fname="calendar-of-life.png", show=False)
+
+    # Create animation
+    fnames = []
+    for alpha in np.linspace(0, 1, 6):
+        fname = f"alpha-{alpha}.png"
+        create_calendar(
+            dark_mode=True, current_week_alpha=alpha, fname=fname, show=False
+        )
+        fnames.append(fname)
+    fnames += fnames[::-1]
+
+    # Save animated png
+    im = APNG()
+    for fname in fnames:
+        im.append_file(fname, delay=50)
+    im.save("calendar-of-life-dark-animated.png")
+
+    # Save gif
+    images = [imageio.imread(fname) for fname in fnames]
+    imageio.mimsave("calendar-of-life-dark-animated.gif", images)
+
+    # Cleanup
+    for fname in fnames:
+        os.unlink(fname)
