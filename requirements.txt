@@ -1,0 +1,5 @@
+apng
+imageio
+matplotlib
+numpy
+pygifsicle
