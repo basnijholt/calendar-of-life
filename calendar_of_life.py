@@ -14,7 +14,7 @@ from pygifsicle import optimize
 
 
 def create_calendar(
-    life: list[LifeEvent],
+    life: list[LifeStage],
     dark_mode: bool = True,
     fname: str = "calendar-of-life-dark.png",
     current_week_alpha: float | None = None,
@@ -42,7 +42,7 @@ def create_calendar(
     weeks_of_life_past = np.cumsum(weeks_of_life)
 
     data = defaultdict(list)
-    colors = {e.name: e.color for e in life[1:]}
+    colors = {e.stage: e.color for e in life[1:]}
     colors["future"] = face
     week_num = 0
     weeks = np.linspace(0, h, 52)
@@ -52,7 +52,7 @@ def create_calendar(
             week_num += 1
             index = bisect.bisect_left(weeks_of_life_past, week_num) + 1
             stage = (
-                "future" if index == len(weeks_of_life_past) + 1 else life[index].name
+                "future" if index == len(weeks_of_life_past) + 1 else life[index].stage
             )
             data[stage].append((week, year))
 
@@ -86,41 +86,51 @@ def create_calendar(
         plt.show()
 
 
-def main(life: list[tuple[str, date, str | None]]):
-    create_calendar(life, dark_mode=True, fname="calendar-of-life-dark.png", show=False)
-    create_calendar(life, dark_mode=False, fname="calendar-of-life.png", show=False)
-
+def animate(
+    life: list[LifeStage],
+    dark_mode: bool = True,
+    save_gif: bool = True,
+    save_apng: bool = True,
+    fname_stem: str = "calendar-of-life-dark-animated",
+):
     # Create animation
     alphas = np.linspace(0, 1, 6)
     fnames = []
     for alpha in alphas:
         fname = f"alpha-{alpha}.png"
         create_calendar(
-            life, dark_mode=True, current_week_alpha=alpha, fname=fname, show=False
+            life, dark_mode=dark_mode, current_week_alpha=alpha, fname=fname, show=False
         )
         fnames.append(fname)
     fnames += fnames[::-1]
 
-    ## Saving images
-    fname_animated = "calendar-of-life-dark-animated"
-    # Save animated png
-    im = APNG()
-    for fname in fnames:
-        im.append_file(fname, delay=50)
-    im.save(f"{fname_animated}.png")
+    if save_apng:
+        # Save animated png
+        im = APNG()
+        for fname in fnames:
+            im.append_file(fname, delay=50)
+        im.save(f"{fname_stem}.png")
 
-    # Save gif
-    images = [imageio.imread(fname) for fname in fnames]
-    imageio.mimsave(f"{fname_animated}.gif", images)
-    optimize(f"{fname_animated}.gif")
+    if save_gif:
+        # Save gif
+        images = [imageio.imread(fname) for fname in fnames]
+        imageio.mimsave(f"{fname_stem}.gif", images)
+        optimize(f"{fname_stem}.gif")
 
     # Cleanup
     for fname in fnames[: len(alphas)]:
         os.unlink(fname)
 
 
-class LifeEvent(NamedTuple):
-    name: str
+def create_all(life: list[tuple[str, date, str | None]]):
+    create_calendar(life, dark_mode=True, fname="calendar-of-life-dark.png", show=False)
+    create_calendar(life, dark_mode=False, fname="calendar-of-life.png", show=False)
+    animate(life, dark_mode=True, fname_stem="calendar-of-life-dark-animated")
+    animate(life, dark_mode=False, fname_stem="calendar-of-life-animated")
+
+
+class LifeStage(NamedTuple):
+    stage: str
     date: date
     color: str | None = None
 
@@ -128,13 +138,13 @@ class LifeEvent(NamedTuple):
 if __name__ == "__main__":
     birthday = date(1990, 12, 28)
     life = [  # (stage, date, color)
-        LifeEvent("born", birthday),
-        LifeEvent("early childhood", birthday + timedelta(days=4 * 365), "C0"),
-        LifeEvent("school", date(2003, 8, 18), "C1"),
-        LifeEvent("high school", date(2009, 9, 1), "C2"),
-        LifeEvent("university", date(2015, 8, 1), "C3"),
-        LifeEvent("travel", date(2016, 2, 1), "C8"),
-        LifeEvent("phd", date(2020, 2, 1), "C6"),
-        LifeEvent("work", date.today(), "C4"),
+        LifeStage("born", birthday),
+        LifeStage("early childhood", birthday + timedelta(days=4 * 365), "C0"),
+        LifeStage("school", date(2003, 8, 18), "C1"),
+        LifeStage("high school", date(2009, 9, 1), "C2"),
+        LifeStage("university", date(2015, 8, 1), "C3"),
+        LifeStage("travel", date(2016, 2, 1), "C8"),
+        LifeStage("phd", date(2020, 2, 1), "C6"),
+        LifeStage("work", date.today(), "C4"),
     ]
-    main(life)
+    create_all(life)
