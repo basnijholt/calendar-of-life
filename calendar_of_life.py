@@ -64,7 +64,7 @@ def create_calendar(
         ax.scatter(
             *current_week,
             edgecolors=edge,
-            facecolor="white",
+            facecolor=edge,
             label="now",
             alpha=current_week_alpha,
         )
