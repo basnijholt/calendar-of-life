@@ -33,31 +33,23 @@ def create_calendar(
     birthday = datetime.date(1990, 12, 28)
     today = datetime.date.today()
     life = [
-        ("born", birthday),
-        ("early childhood", birthday + datetime.timedelta(days=4 * 365)),
-        ("school", datetime.date(2003, 8, 18)),
-        ("high school", datetime.date(2009, 9, 1)),
-        ("university", datetime.date(2015, 8, 1)),
-        ("travel", datetime.date(2016, 2, 1)),
-        ("phd", datetime.date(2020, 2, 1)),
-        ("work", today),
+        ("born", birthday, None),
+        ("early childhood", birthday + datetime.timedelta(days=4 * 365), "C0"),
+        ("school", datetime.date(2003, 8, 18), "C1"),
+        ("high school", datetime.date(2009, 9, 1), "C2"),
+        ("university", datetime.date(2015, 8, 1), "C3"),
+        ("travel", datetime.date(2016, 2, 1), "C8"),
+        ("phd", datetime.date(2020, 2, 1), "C6"),
+        ("work", today, "C4"),
     ]
 
-    stages = [key for key, date in life]
-    weeks_of_life = [round((date - birthday).days / 7) for key, date in life]
+    stages = [key for key, _, _ in life]
+    weeks_of_life = [round((date - birthday).days / 7) for _, date, _ in life]
     weeks_of_life_past = np.cumsum(np.diff(weeks_of_life))
 
     data = defaultdict(list)
-    colors = {
-        "early childhood": "C0",
-        "school": "C1",
-        "high school": "C2",
-        "university": "C3",
-        "travel": "C8",
-        "phd": "C6",
-        "work": "C4",
-        "future": face,
-    }
+    colors = {stage: color for stage, _, color in life[1:]}
+    colors["future"] = face
     week_num = 0
     weeks = np.linspace(0, h, 52)
     years = np.linspace(w, 0, 80)
