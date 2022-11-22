@@ -12,6 +12,7 @@ from pygifsicle import optimize
 
 
 def create_calendar(
+    life: list[tuple[str, datetime.date, Optional[str]]],
     dark_mode: bool = True,
     fname: str = "calendar-of-life-dark.png",
     current_week_alpha: Optional[float] = None,
@@ -30,22 +31,14 @@ def create_calendar(
     fig, ax = plt.subplots(figsize=(w, h))
     ax.set_axis_off()
     fig.suptitle("Calendar of life", y=0.89)
-    birthday = datetime.date(1990, 12, 28)
-    today = datetime.date.today()
-    life = [
-        ("born", birthday, None),
-        ("early childhood", birthday + datetime.timedelta(days=4 * 365), "C0"),
-        ("school", datetime.date(2003, 8, 18), "C1"),
-        ("high school", datetime.date(2009, 9, 1), "C2"),
-        ("university", datetime.date(2015, 8, 1), "C3"),
-        ("travel", datetime.date(2016, 2, 1), "C8"),
-        ("phd", datetime.date(2020, 2, 1), "C6"),
-        ("work", today, "C4"),
-    ]
-
     stages = [key for key, _, _ in life]
-    weeks_of_life = [round((date - birthday).days / 7) for _, date, _ in life]
-    weeks_of_life_past = np.cumsum(np.diff(weeks_of_life))
+    # Correct for the fact that 52 weeks is not exactly 1 year
+    # so pretend like a week is 7.024 days.
+    days_per_week = 365.25 / 52
+    weeks_of_life = [
+        (b - a).days / days_per_week for (_, a, _), (_, b, _) in zip(life, life[1:])
+    ]
+    weeks_of_life_past = np.cumsum(weeks_of_life)
 
     data = defaultdict(list)
     colors = {stage: color for stage, _, color in life[1:]}
@@ -53,14 +46,11 @@ def create_calendar(
     week_num = 0
     weeks = np.linspace(0, h, 52)
     years = np.linspace(w, 0, 80)
-    for i, year in enumerate(years):
+    for year in years:
         for week in weeks:
             week_num += 1
             index = bisect.bisect_left(weeks_of_life_past, week_num) + 1
-            if index == len(weeks_of_life_past) + 1:
-                stage = "future"
-            else:
-                stage = stages[index]
+            stage = "future" if index == len(weeks_of_life_past) + 1 else stages[index]
             data[stage].append((week, year))
 
     for k, v in data.items():
@@ -93,9 +83,9 @@ def create_calendar(
         plt.show()
 
 
-def main():
-    create_calendar(dark_mode=True, fname="calendar-of-life-dark.png", show=False)
-    create_calendar(dark_mode=False, fname="calendar-of-life.png", show=False)
+def main(life: list[tuple[str, datetime.date, Optional[str]]]):
+    create_calendar(life, dark_mode=True, fname="calendar-of-life-dark.png", show=False)
+    create_calendar(life, dark_mode=False, fname="calendar-of-life.png", show=False)
 
     # Create animation
     alphas = np.linspace(0, 1, 6)
@@ -103,7 +93,7 @@ def main():
     for alpha in alphas:
         fname = f"alpha-{alpha}.png"
         create_calendar(
-            dark_mode=True, current_week_alpha=alpha, fname=fname, show=False
+            life, dark_mode=True, current_week_alpha=alpha, fname=fname, show=False
         )
         fnames.append(fname)
     fnames += fnames[::-1]
@@ -127,4 +117,15 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    birthday = datetime.date(1990, 12, 28)
+    life = [  # (stage, date, color)
+        ("born", birthday, None),
+        ("early childhood", birthday + datetime.timedelta(days=4 * 365), "C0"),
+        ("school", datetime.date(2003, 8, 18), "C1"),
+        ("high school", datetime.date(2009, 9, 1), "C2"),
+        ("university", datetime.date(2015, 8, 1), "C3"),
+        ("travel", datetime.date(2016, 2, 1), "C8"),
+        ("phd", datetime.date(2020, 2, 1), "C6"),
+        ("work", datetime.date.today(), "C4"),
+    ]
+    main(life)
