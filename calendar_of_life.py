@@ -62,7 +62,7 @@ def create_calendar(
     weeks = np.linspace(0, h, 52)
     years = np.linspace(w, 0, 80)
     for i, year in enumerate(years):
-        for j, week in enumerate(weeks):
+        for week in weeks:
             week_num += 1
             index = bisect.bisect_left(weeks_of_life_past, week_num) + 1
             if index == len(weeks_of_life_past) + 1:
@@ -73,6 +73,7 @@ def create_calendar(
 
     for k, v in data.items():
         ax.scatter(*zip(*v), edgecolors=edge, facecolor=colors[k], label=k)
+
     if current_week_alpha is not None:
         current_week = data["future"].pop(0)
         ax.scatter(
@@ -82,6 +83,7 @@ def create_calendar(
             label="now",
             alpha=current_week_alpha,
         )
+
     for i, year in enumerate(years):
         if i % 10 == 0 and i > 0:
             ax.text(
@@ -92,13 +94,14 @@ def create_calendar(
                 verticalalignment="center",
                 fontsize=9,
             )
+
     plt.legend()
     plt.savefig(fname, dpi=300)
     if show:
         plt.show()
 
 
-if __name__ == "__main__":
+def main():
     create_calendar(dark_mode=True, fname="calendar-of-life-dark.png", show=False)
     create_calendar(dark_mode=False, fname="calendar-of-life.png", show=False)
 
@@ -127,5 +130,9 @@ if __name__ == "__main__":
     optimize(f"{fname_animated}.gif")
 
     # Cleanup
-    for fname in fnames[:len(alphas)]:
+    for fname in fnames[: len(alphas)]:
         os.unlink(fname)
+
+
+if __name__ == "__main__":
+    main()
